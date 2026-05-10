@@ -1,0 +1,130 @@
+# Productivity Premia and Global Market Links
+## Evidence from Greek Firm-Level Data
+
+---
+
+## Research Question
+
+Do firms connected to global markets through exporting exhibit 
+higher labour productivity than domestic-only firms in Greece — 
+and does this premium persist after controlling for firm size, 
+age, sector, and time?
+
+---
+
+## Data
+
+- **Source:** World Bank Enterprise Survey
+- **Country:** Greece
+- **Years:** 2018 and 2023 (panel data)
+- **Observations:** 1,195 firms after cleaning
+- **Access:** Free at enterprisesurveys.org
+
+The World Bank Enterprise Survey collects firm-level data from 
+nationally representative samples of private sector businesses. 
+Variables used include annual sales, number of employees, export 
+market status, foreign ownership, firm age, sector, and region.
+
+---
+
+## Methods
+
+### 1. Data Cleaning
+- Selected 10 key variables from 560 available
+- Replaced negative survey codes with NA
+- Created labour productivity as log(sales/employees)
+- Created binary exporter and foreign ownership indicators
+
+### 2. Descriptive Analysis
+- Compared productivity distributions of exporters vs 
+  non-exporters
+- Found exporters show higher and more dispersed productivity
+
+### 3. Regression Analysis
+Four progressive OLS specifications using `fixest`:
+
+| Model | Specification |
+|-------|--------------|
+| 1 | Raw gap — no controls |
+| 2 | Controls: log employees, firm age, age² |
+| 3 | Model 2 + sector fixed effects |
+| 4 | Model 3 + year fixed effects |
+
+### 4. LASSO Propensity Score Weighting
+To partially address selection bias:
+- Used LASSO logistic regression (`glmnet`) to predict 
+  exporter status from firm characteristics
+- Cross-validated lambda selection (λ = 0.0004)
+- Constructed Inverse Probability Weights (IPW)
+- Reran Model 4 specification with IPW weights
+
+---
+
+## Main Findings
+
+Exporting firms are approximately **75-77% more productive** 
+than non-exporting firms (coefficient ≈ 0.57 in log points), 
+a finding that is:
+
+- Highly statistically significant (p < 0.001) across all 
+  specifications
+- Robust to controls for firm size, age, sector, and year
+- Stable after LASSO-IPW reweighting (0.570 → 0.558)
+
+The stability of the coefficient across all five specifications 
+suggests the exporter productivity premium is not explained by 
+observable differences in firm characteristics.
+
+---
+
+## Limitations and Motivation for Causal Research
+
+This analysis establishes a robust conditional correlation 
+between exporter status and firm productivity in Greece. 
+However it cannot establish causality for two reasons:
+
+**1. Selection bias:** More productive firms may self-select 
+into exporting before we observe them. Our LASSO propensity 
+score approach partially addresses observable selection, but 
+unobservable firm characteristics — such as managerial quality 
+— may still confound the estimate.
+
+**2. Reverse causality:** Higher productivity may cause firms 
+to export, rather than exporting causing higher productivity.
+
+To identify a causal effect, one would need an event study 
+design — comparing firms before and after they begin exporting, 
+against a valid control group that has not yet done so. This is 
+precisely the identification strategy employed by Alfaro-Ureña, 
+Manelici & Vasquez (2022, Quarterly Journal of Economics), who 
+exploit firm-to-firm transaction data from Costa Rica's tax 
+authority to identify the moment a domestic firm first supplies 
+a multinational corporation.
+
+---
+
+## How to Reproduce
+
+1. Register at enterprisesurveys.org and download 
+   Greece 2018-2023 panel dataset
+2. Clone this repository
+3. Run scripts in order: 05_clean_final.R → 
+   06_explore.R → 07_regressions.R → 08_lasso.R
+
+---
+
+## Repository Structure
+greece-productivity/
+├── README.md
+├── data/
+│   └── README.md (data source instructions)
+├── code/
+│   ├── 05_clean_final.R
+│   ├── 06_explore.R
+│   ├── 07_regressions.R
+│   └── 08_lasso.R
+└── outputs/
+├── fig1_productivity_distribution.png
+├── fig2_propensity_scores.png
+├── table1_regression_results.png
+└── table2_ipw_comparison.png
